@@ -7,10 +7,13 @@ plot(NULL,
      xlim=c(-1,1), xaxs="i", xlab=expression(delta^Indep6), 
      ylim=c(-1,1), yaxs="i", ylab=expression(delta^Strk7), 
      cex.lab=2.00, cex.axis=2.00, las=1)
+abline(h=0,lty=2)
+abline(v=0,lty=2)
 rect(xleft=0,ybottom=par("usr")[3],xright=par("usr")[2],ytop=par("usr")[4],
      col = "gray90", lwd=1, border="black")
 abline(h=0,lty=2)
 abline(v=0,lty=2)
+
 dev.off()
 
 #### 2.2 Figure 2b Any rule ####
@@ -21,13 +24,14 @@ plot(NULL,
      xlim=c(-1,1), xaxs="i", xlab=expression(delta^Indep6), 
      ylim=c(-1,1), yaxs="i", ylab=expression(delta^Strk7), 
      cex.lab=2.00, cex.axis=2.00, las=1)
+abline(h=0,lty=2)
+abline(v=0,lty=2)
 rect(xleft=0,ybottom=par("usr")[3],xright=par("usr")[2],ytop=par("usr")[4],
      #density=10, angle = 45,
      col = "gray90", lwd=1, border="black")
 rect(xleft=par("usr")[1], ybottom=0,xright=par("usr")[2],ytop=par("usr")[4],
      #density=10, angle = -45,
      col = "gray90", lwd=1, border="black")
-
 abline(h=0,lty=2)
 abline(v=0,lty=2)
 dev.off()
@@ -40,11 +44,13 @@ plot(NULL,
      xlim=c(-1,1), xaxs="i", xlab=expression(delta^Indep6), 
      ylim=c(-1,1), yaxs="i", ylab=expression(delta^Strk7), 
      cex.lab=2.00, cex.axis=2.00, las=1)
+abline(h=0,lty=2)
+abline(v=0,lty=2)
+
 rect(xleft=0,ybottom=0,xright=par("usr")[2],ytop=par("usr")[4],#density=10, 
      col = "gray90", lwd=1, border="black")
 abline(h=0,lty=2)
 abline(v=0,lty=2)
-
 dev.off()
 
 #### 2.4 Figure 2d Compensatory rule ####
@@ -59,12 +65,15 @@ plot(NULL,
      xlim=c(-1,1), xaxs="i", xlab=expression(delta^Indep6), 
      ylim=c(-1,1), yaxs="i", ylab=expression(delta^Strk), 
      cex.lab=2.00, cex.axis=2.00, las=1)
+abline(h=0,lty=2)
+abline(v=0,lty=2)
 polygon(x=c(-0.25,0.25,1,1,0.25,-0.25),
         y=c(par("usr")[4],par("usr")[3],par("usr")[3],par("usr")[4],par("usr")[4],par("usr")[4]),
         col = "gray90", lwd=1, border="black")
 rect(xleft=par("usr")[1], ybottom=par("usr")[3], xright=par("usr")[2], ytop=par("usr")[4])
 abline(h=0,lty=2)
 abline(v=0,lty=2)
+
 
 dev.off()
 
