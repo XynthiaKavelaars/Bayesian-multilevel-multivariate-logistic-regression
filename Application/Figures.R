@@ -13,7 +13,6 @@ rect(xleft=0,ybottom=par("usr")[3],xright=par("usr")[2],ytop=par("usr")[4],
      col = "gray90", lwd=1, border="black")
 abline(h=0,lty=2)
 abline(v=0,lty=2)
-
 dev.off()
 
 #### 2.2 Figure 2b Any rule ####
@@ -27,10 +26,8 @@ plot(NULL,
 abline(h=0,lty=2)
 abline(v=0,lty=2)
 rect(xleft=0,ybottom=par("usr")[3],xright=par("usr")[2],ytop=par("usr")[4],
-     #density=10, angle = 45,
-     col = "gray90", lwd=1, border="black")
+    col = "gray90", lwd=1, border="black")
 rect(xleft=par("usr")[1], ybottom=0,xright=par("usr")[2],ytop=par("usr")[4],
-     #density=10, angle = -45,
      col = "gray90", lwd=1, border="black")
 abline(h=0,lty=2)
 abline(v=0,lty=2)
@@ -46,18 +43,14 @@ plot(NULL,
      cex.lab=2.00, cex.axis=2.00, las=1)
 abline(h=0,lty=2)
 abline(v=0,lty=2)
-
 rect(xleft=0,ybottom=0,xright=par("usr")[2],ytop=par("usr")[4],#density=10, 
      col = "gray90", lwd=1, border="black")
 abline(h=0,lty=2)
 abline(v=0,lty=2)
+
 dev.off()
 
 #### 2.4 Figure 2d Compensatory rule ####
-weights <- function(a1, delta1){(-1*a1*delta1)/(1-a1)}
-delta1 <- seq(-1,1,0.1)
-dist <- 0.6
-
 setEPS()
 postscript("Application/Plots/Figure2d_Compensatory.eps", family="Times")
 par(mgp=c(3.5,1,0), mar=c(6,6,4,2))
@@ -73,7 +66,6 @@ polygon(x=c(-0.25,0.25,1,1,0.25,-0.25),
 rect(xleft=par("usr")[1], ybottom=par("usr")[3], xright=par("usr")[2], ytop=par("usr")[4])
 abline(h=0,lty=2)
 abline(v=0,lty=2)
-
 
 dev.off()
 
