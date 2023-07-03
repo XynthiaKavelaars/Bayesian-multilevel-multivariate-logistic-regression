@@ -14,7 +14,7 @@ cl <- makeCluster(nCores -1)
 registerDoParallel(cl)
 
 #### Set working directory ####
-setwd('')
+try(setwd(''))
 
 wd <- getwd()
 #### Load functions ####

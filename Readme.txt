@@ -54,6 +54,9 @@ TextualOutput.R				R-script to create in-text results
 VariableDefinitions.R			Various variable definitions
 Figures.R					R-script to create figures
 
+\\Functions:
+FunctionsApplication.R			Various functions to estimate parameters
+
 \\Workspaces:				Empty folder, where workspaces will be stored after running "RunApplication.R"
 \\Plots:					Empty folder, where workspaces will be stored after running "RunApplication.R"
 

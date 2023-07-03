@@ -26,4 +26,5 @@ AC_NH <- lapply(Diags_NH_m6[["AC"]], function(x) apply(x[c(1,10),], 1, range))
 Convergence_H <- Diags_m6[["Convergence"]]
 Convergence_NH <- Diags_NH_m6[["Convergence"]]
 
-
+# Log Bayes factor BMLR - BMB
+LogBF_BMLR_BMB.BFpack <- log(BF_BMLR_BMB.BFpack[["BFtu_confirmatory"]][1])

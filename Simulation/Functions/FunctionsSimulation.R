@@ -82,14 +82,17 @@ GenerateData <- function(TruePar, Q, pX = NULL, Mux = NULL, SigmaX = NULL, J, n,
 # - gSigma0: (PR x PR) Prior covariance matrix of fixed regression coefficients, where PR = no. of random covariates.
 # - nu0: Scalar. Degrees of freedom of prior inverse-Wishart distribution.
 # - Tau0: (PR x PR) prior matrix of inverse-Wishart distribution.
+# - ReturnThinned: Logical. Should thinned chains be returned? Default = FALSE.
+# - nThin: Thinning rate. Default is 1. Adjustable to integers with a value large than one, only when ReturnThinned = TRUE. 
 
 # Output:
 # A list with:
-# - bDrawPG: List of length nIt with PF x Q matrices with estimated fixed regression coefficients
-# - gDrawPG: List of length nIt with PR x Q matrices with estimated random regression coefficients
-# - tauDrawPG: List of length nIt with PR x PR covariance matrices of random regression coefficients.
+# - bDrawPG: List of length nIt/nThin with PF x Q matrices with estimated fixed regression coefficients
+# - gDrawPG: List of length nIt/nThin with PR x Q matrices with estimated random regression coefficients
+# - gjDrawPG: List of length nIt/nThin with J lists of PR x Q matrices with estimated random regression coefficients (only when ReturnThinned = TRUE)
+# - tauDrawPG: List of length nIt/nThin with PR x PR covariance matrices of random regression coefficients.
 
-SampleBetaPG_ML <- function(X, Y, Fixed, Random, nBurn, nIt, Start, bMu0 = NULL, bSigma0 = NULL, gMu0 = NULL, gSigma0 = NULL, nu0 = NULL, Tau0 = NULL){
+SampleBetaPG_ML <- function(X, Y, Fixed, Random, nBurn, nIt, Start, bMu0 = NULL, bSigma0 = NULL, gMu0 = NULL, gSigma0 = NULL, nu0 = NULL, Tau0 = NULL, ReturnThinned = FALSE, nThin = 1){
   out <- tryCatch(
     {
     J <- length(X)    
@@ -206,8 +209,20 @@ SampleBetaPG_ML <- function(X, Y, Fixed, Random, nBurn, nIt, Start, bMu0 = NULL,
   }
   close(pb)
 
- if(pF > 0){Out.Fixed <- list(bDrawPG = bDrawPG)} 
-  if(pR > 0){Out.Random <- list(gDrawPG = gDrawPG, tauDrawPG = tauDrawPG)}
+  if(ReturnThinned){
+  if(pF > 0){
+    Thinned.bDrawPG <- lapply(seq(1,nIt,nThin), function(i) {bDrawPG[[i]]})
+    Out.Fixed <- list(bDrawPG = Thinned.bDrawPG)}
+  if(pR > 0){
+    Thinned.gDrawPG <- lapply(seq(1,nIt,nThin), function(i) {gDrawPG[[i]]})
+  Thinned.gjDrawPG <- lapply(seq(1,nIt,nThin), function(i) {gjDrawPG[[i]]})
+  Thinned.tauDrawPG <- lapply(seq(1,nIt,nThin), function(i) {tauDrawPG[[i]]})
+  Out.Random <- list(gDrawPG = Thinned.gDrawPG, gjDrawPG = Thinned.gjDrawPG, tauDrawPG = Thinned.tauDrawPG)}
+  } else {
+    if(pF > 0){Out.Fixed <- list(bDrawPG = bDrawPG)} 
+    if(pR > 0){Out.Random <- list(gDrawPG = gDrawPG, tauDrawPG = tauDrawPG)}
+    
+  }
 return(c(if(pF > 0){Out.Fixed}, if(pR > 0){Out.Random}))
     },
 error=function(e) {
@@ -239,16 +254,19 @@ error=function(e) {
 # - nu0: Scalar. Degrees of freedom of prior inverse-Wishart distribution.
 # - Tau0: (PR x PR) prior matrix of inverse-Wishart distribution.
 # - nChain: Scalar. Number of chains. 
+# - ReturnThinned: Logical. Should thinned chains be returned? Default = FALSE.
+# - nThin: Thinning rate. Default is 1. Adjustable to integers with a value large than one, only when ReturnThinned = TRUE. 
 
 # Output: 
 # A list with:
 # - Pars: List of length nChain sublists of:
-# -- bDrawPG: List of length nIt with PF x Q matrices with estimated fixed regression coefficients
-# -- gDrawPG: List of length nIt with PR x Q matrices with estimated random regression coefficients
-# -- tauDrawPG: List of length nIt with PR x PR covariance matrices of random regression coefficients.
+# -- bDrawPG: List of length nIt/nThin with PF x Q matrices with estimated fixed regression coefficients
+# -- gDrawPG: List of length nIt/nThin with PR x Q matrices with estimated random regression coefficients
+# -- gjDrawPG: List of length nIt/nThin with J lists of PR x Q matrices with estimated random regression coefficients (only when ReturnThinned = TRUE)
+# -- tauDrawPG: List of length nIt/nThin with PR x PR covariance matrices of random regression coefficients.
 # - Convergence: Multivariate Gelman-Rubin statistic to asses convergence
 
-EstimateParameters <- function(X, Y, Fixed, Random, nBurn, nIt, Start, bMu0 = NULL, bSigma0 = NULL, gMu0 = NULL, gSigma0 = NULL, nu0 = NULL, Tau0 = NULL, nChain){
+EstimateParameters <- function(X, Y, Fixed, Random, nBurn, nIt, Start, bMu0 = NULL, bSigma0 = NULL, gMu0 = NULL, gSigma0 = NULL, nu0 = NULL, Tau0 = NULL, nChain, ReturnThinned = FALSE, nThin = 1){
 
   Chain <- vector("list", nChain)
   for(chain in 1:nChain){
@@ -256,27 +274,27 @@ EstimateParameters <- function(X, Y, Fixed, Random, nBurn, nIt, Start, bMu0 = NU
                                     nBurn = nBurn, nIt = nIt, Start = Start[chain], 
                                     bMu0 = bMu0, bSigma0 = bSigma0, 
                                     gMu0 = gMu0, gSigma0 = gSigma0,
-                                    nu0 = nu0, Tau0 = Tau0)
+                                    nu0 = nu0, Tau0 = Tau0, ReturnThinned = ReturnThinned, nThin = nThin)
   
   
   }
  
   if(length(Fixed) > 0){
-  Chains.bDraw <- lapply(1:nChain, function(chain) as.mcmc(matrix(unlist(Chain[[chain]][["bDrawPG"]]), nrow = nIt, ncol = length(Fixed) * Q, byrow = TRUE)[,-((length(Fixed) * (Q-1)) + 1:(length(Fixed)))])) #[,-((Q-1)*length(Fixed)+1:length(Fixed))])) 
+  Chains.bDraw <- lapply(1:nChain, function(chain) as.mcmc(matrix(unlist(Chain[[chain]][["bDrawPG"]]), nrow = nIt/nThin, ncol = length(Fixed) * Q, byrow = TRUE)[,-((length(Fixed) * (Q-1)) + 1:(length(Fixed)))])) #[,-((Q-1)*length(Fixed)+1:length(Fixed))])) 
   Convergence.bDraw <- gelman.diag(Chains.bDraw)$mpsrf
   Convergence.Fixed <- Convergence.bDraw
   }
  
   if(length(Random) > 0){
-    Chains.tDraw <- lapply(1:nChain, function(chain) as.mcmc(matrix(unlist(lapply(1:(nIt), function(i) lapply(1:(Q-1), function(q) {x <- Chain[[chain]][["tauDrawPG"]][[i]][[q]]; x[lower.tri(x, diag = TRUE)]}))), nrow = nIt, byrow=TRUE)))
-  Chains.gDraw <- lapply(1:nChain, function(chain) as.mcmc(matrix(unlist(Chain[[chain]][["gDrawPG"]]), nrow = nIt, ncol = length(Random) * Q, byrow = TRUE)[,-((length(Random) * (Q-1)) + 1:(length(Random)))]))
+    Chains.tDraw <- lapply(1:nChain, function(chain) as.mcmc(matrix(unlist(lapply(1:(nIt/nThin), function(i) lapply(1:(Q-1), function(q) {x <- Chain[[chain]][["tauDrawPG"]][[i]][[q]]; x[lower.tri(x, diag = TRUE)]}))), nrow = nIt/nThin, byrow=TRUE)))
+  Chains.gDraw <- lapply(1:nChain, function(chain) as.mcmc(matrix(unlist(Chain[[chain]][["gDrawPG"]]), nrow = nIt/nThin, ncol = length(Random) * Q, byrow = TRUE)[,-((length(Random) * (Q-1)) + 1:(length(Random)))]))
     Convergence.gDraw <- gelman.diag(Chains.gDraw)$mpsrf
   Convergence.tDraw <- gelman.diag(Chains.tDraw)$mpsrf
   Convergence.Random <- list(gDraw = Convergence.gDraw, tDraw = Convergence.tDraw)}
   
   Convergence <- c(if(length(Fixed) > 0){Convergence.Fixed}, if(length(Random) > 0){Convergence.Random})
 
-  return(list(Pars = Chain, Convergence = Convergence))
+    return(list(Pars = Chain, Convergence = Convergence))
 }
 
 
@@ -493,9 +511,9 @@ Transform2Theta <- function(EstPars = NULL, X, Y = NULL, nIt, Types, Range, Valu
   Analytical <- which(apply(Types, 1, function(x) c("Analytical") %in% x["Methods"]))
   MvB <- which(apply(Types, 1, function(x) c("MvB") %in% x["Methods"]))
   
-  xEmpirical <- lapply(1:nrow(Types), function(x) vector("list", 2))
+  xEmpirical <- lapply(1:nrow(Types), function(x) lapply(1:J, function(j) vector("list", 2)))
   Theta.E <- Theta.C <- lapply(1:nrow(Types), function(i) vector("list", J))
-  mTheta.E <- mTheta.C <- vector("list", nrow(Types))
+  mTheta.E <- mTheta.C <- lapply(1:nrow(Types), function(type) vector("list", J))
   
   nj.E <- nj.C <- rep(NA, J)
   Indices <- vector("list", J)
@@ -514,14 +532,15 @@ Transform2Theta <- function(EstPars = NULL, X, Y = NULL, nIt, Types, Range, Valu
      nj.C[j] <- length(intersect(Indices[[j]], which(X[[j]][,"Trt"] == 0)))
      }
     if(i %in% Empirical){
-       xEmpirical[[i]] <- SamplePopulation(X = do.call(rbind, X), Method = Types[i,"Methods"], Values = Value[[Types[i,"Populations"]]], Range = Range[[Types[i,"Populations"]]],
+      for(j in 1:J){
+       xEmpirical[[i]] <- SamplePopulation(X = X[[j]], Method = Types[i,"Methods"], Values = Value[[Types[i,"Populations"]]], Range = Range[[Types[i,"Populations"]]],
                                           Fixed = Fixed, Random = Random)
-      mTheta.E[[i]] <- EstimateThetaEmpirical(EstPars = EstPars, X = xEmpirical[[i]][["xE"]])
-      mTheta.C[[i]] <- EstimateThetaEmpirical(EstPars = EstPars, X = xEmpirical[[i]][["xC"]])
-          } else if(i %in% Analytical){
+      mTheta.E[[i]][[j]] <- EstimateThetaEmpirical(EstPars = lapply(1:nIt, function(i) EstPars[[i]][[j]]), X = xEmpirical[[i]][["xE"]])
+      mTheta.C[[i]][[j]] <- EstimateThetaEmpirical(EstPars = lapply(1:nIt, function(i) EstPars[[i]][[j]]), X = xEmpirical[[i]][["xC"]])
+          }} else if(i %in% Analytical){
       if(ncol(X[[1]]) > 2){
-         mTheta.E[[i]] <- EstimateThetaAnalytical(EstPars = EstPars, X = do.call(rbind, X), Trt = 1, RangeX = Range[[Types[i,"Populations"]]], Fixed = Fixed, Random = Random)
-        mTheta.C[[i]] <- EstimateThetaAnalytical(EstPars = EstPars, X = do.call(rbind, X), Trt = 0, RangeX = Range[[Types[i,"Populations"]]], Fixed = Fixed, Random = Random)
+         mTheta.E[[i]] <- EstimateThetaAnalytical(EstPars = EstPars[[j]], X = do.call(rbind, X), Trt = 1, RangeX = Range[[Types[i,"Populations"]]], Fixed = Fixed, Random = Random)
+        mTheta.C[[i]] <- EstimateThetaAnalytical(EstPars = EstPars[[j]], X = do.call(rbind, X), Trt = 0, RangeX = Range[[Types[i,"Populations"]]], Fixed = Fixed, Random = Random)
       }else{
          mTheta.E[[i]] <- mTheta.C[[i]] <- NULL
        }
@@ -534,8 +553,8 @@ Transform2Theta <- function(EstPars = NULL, X, Y = NULL, nIt, Types, Range, Valu
       theta.E <- EstimateThetaMvB(yE, PriorAlpha, nPars = nPars)
       theta.C <- EstimateThetaMvB(yC, PriorAlpha, nPars = nPars)
       
-      mTheta.E[[i]] <- lapply(seq_len(nrow(theta.E)),function(x) theta.E[x,])
-      mTheta.C[[i]] <- lapply(seq_len(nrow(theta.C)),function(x) theta.C[x,])
+      mTheta.E[[i]][[j]] <- lapply(seq_len(nrow(theta.E)),function(x) theta.E[x,])
+      mTheta.C[[i]][[j]] <- lapply(seq_len(nrow(theta.C)),function(x) theta.C[x,])
   
     }
   }
