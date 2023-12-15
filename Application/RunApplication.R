@@ -1,33 +1,30 @@
 rm(list=ls())
-# Table of variables retrieved from:
-# https://trialsjournal.biomedcentral.com/articles/10.1186/1745-6215-12-101/tables/2
 
-# Reference retrieved from:
-# https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(97)04011-7/fulltext
-
-
-# Load packages
-packages <- c('MCMCpack', 'coda', 'pgdraw', 'TruncatedNormal',  
-              'foreach', 'doParallel', 'xtable', 'extrafont')
+#### Load packages ####
+packages <- c("haven", "MCMCpack", "coda", "pgdraw", "tcltk", "mcmcse", "xtable", "BFpack") 
 
 package.check <- lapply(packages, function(x) {
-    if (!require(x, character.only = TRUE)) {
-      install.packages(x, dependencies = TRUE)
-      library(x, character.only = TRUE)
-    }})
-
-# Set working directory
-try(setwd("C:/Users/xynni/surfdrive/Werk/Bayesian Adaptive Clinical Trials/Project 2/Submitted version - Multivariate Behavioral Research/Revision V1/Research archive/Application"))
+  if (!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = TRUE)
+    library(x, character.only = TRUE)
+  }})
 
 
-Dataset <- read.csv("IST_Data.csv")
+#### Set working directory####
+try(setwd(''))
 
-# Run application
-source("PrepareData.R")
-source("Functions/VariableDefinitions.R")
-source("Functions/FunctionsApplication.R")
-source("SampleParameters.R")
-source("MakeTableFigure.R")
-source("TextualOutput.R")
+#### Load functions ####
+source("Application/Functions/FunctionsApplication.R")
+source("Simulation/Functions/FunctionsDataTransformation.R")
+source("Application/VariableDefinitions.R")
+Data <- read_sas("Application/DatasetIST3.sas7bdat")
+set.seed(2022) 
 
+wd <- getwd()
+#### Run application ####
+source("Application/PrepareData.R")
+source("Application/Evaluate.R")
+source("Äpplication/BayesFactors.R")
+source("Application/Tabulate.R")
+source("Application/TextualOutput.R")
 
